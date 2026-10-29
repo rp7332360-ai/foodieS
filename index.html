@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foodi - Checkout & Counter Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    
+
+    <header>
+        <div class="logo" onclick="window.location.href='index.html'" style="cursor: pointer;">Foodi 🍔</div>
+        <div class="cart-btn" style="background: #2f3542;">Counter & Checkout</div>
+    </header>
+
+    <div class="main-checkout-layout">
+
+        <!-- Left Box: Payment Option -->
+        <div class="checkout-container" id="checkoutSection" style="margin-top: 0;">
+            <h2>Select Payment Method</h2>
+            
+            <div class="payment-options">
+                <label class="pay-card" onclick="selectMode('Counter')">
+                    <input type="radio" name="payment" checked>
+                    <div class="pay-info">
+                        <i class="fa-solid fa-cash-register"></i>
+                        <div>
+                            <h4>Pay on Counter</h4>
+                            <small>Pay cash or card at the restaurant counter</small>
+                        
+                        </div>
+                    </div>
+                </label>
+
+                <label class="pay-card" onclick="selectMode('UPI')">
+                    <input type="radio" name="payment">
+                    <div class="pay-info">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                        <div>
+                             
+                            <h4>Direct UPI App (GPay / PhonePe / Paytm)</h4>
+                            <small>Open UPI app directly on your phone</small>
+                        </div>
+                    </div>
+                </label>
+            </div>
+        <a href="https://razorpay.me/@foodie6159" target="_blank" class="checkout-btn" style="margin-top: 25px; display: inline-block; text-align: center; text-decoration: none;">Confirm Order & Pay</a>
+        </div>
+
+        <!-- Receipt Section -->
+        <div class="checkout-container" id="receiptSection" style="display: none; text-align: center; margin-top: 0;">
+            <div style="color: #2ed573; font-size: 45px; margin-bottom: 5px;">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h2 style="color: #2f3542; margin-bottom: 5px;">Counter Order Placed!</h2>
+            <p style="color: #747d8c; font-size: 12px; margin-bottom: 15px;">Please show this receipt at the counter</p>
+
+            <div style="background: #f1f2f6; padding: 12px; border-radius: 10px; text-align: left; margin-bottom: 15px; font-size: 13px;">
+                <p><strong>Order ID:</strong> #FOODI<span id="orderId">8492</span></p>
+                <p><strong>Payment Mode:</strong> Pay on Counter (Cash/Card)</p>
+                <p><strong>Date:</strong> <span id="orderDate"></span></p>
+                <hr style="margin: 8px 0; border: 0; border-top: 1px solid #ddd;">
+                <p style="color: #2f3542;"><strong>Status:</strong> <span style="color: #ffa502; font-weight: 600;">Pending at Counter</span></p>
+            </div>
+
+            <button class="checkout-btn" style="background: #ff4757;" onclick="resetToMenu()">Back to Menu</button>
+        </div>
+
+        <!-- Right Box: Counter Live Orders List (Pending / Completed) -->
+        <div class="checkout-container" style="margin-top: 0;">
+            <h2>COUNTER AND SOK Live Orders</h2>
+            <p style="color: #747d8c; font-size: 12px; margin-bottom: 15px;">Track pending and completed orders</p>
+
+            <div class="orders-list" id="counterOrdersList"></div>
+        </div>
+
+    </div>
+
+    <script>
+        let chosenMode = "Pay on Counter";
+        let counterOrders = [
+            { id: "#FOODI101", mode: "Counter", status: "Pending" },
+            { id: "#FOODI102", mode: "UPI", status: "Completed" },
+            { id: "#FOODI103", mode: "Counter", status: "Pending" }
+        ];
+
+        function renderOrders() {
+            const listContainer = document.getElementById('counterOrdersList');
+            if(!listContainer) return;
+            listContainer.innerHTML = '';
+
+            counterOrders.forEach((order, index) => {
+                const isCompleted = order.status === "Completed";
+                const row = document.createElement('div');
+                row.className = `order-row ${isCompleted ? 'completed' : ''}`;
+                row.innerHTML = `
+                    <div>
+                        <strong>${order.id}</strong><br>
+                        <small style="color:#747d8c;">Mode: ${order.mode}</small><br>
+                        <span class="status-badge ${isCompleted ? 'badge-completed' : 'badge-pending'}">${order.status}</span>
+                    </div>
+                    <div>
+                        ${!isCompleted ? `<button class="complete-action-btn" onclick="markComplete(${index})">Mark Complete</button>` : `<span style="color:#2ed573; font-weight:600; font-size:12px;"><i class="fa-solid fa-check"></i> Done</span>`}
+                    </div>
+                `;
+                listContainer.appendChild(row);
+            });
+        }
+
+        renderOrders();
+
+        function selectMode(mode) {
+            chosenMode = mode;
+        }
+
+        function confirmAndPay() {
+            const newId = "#FOODI" + Math.floor(1000 + Math.random() * 9000);
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            if (chosenMode === 'UPI') {
+                counterOrders.unshift({ id: newId, mode: "UPI", status: "Completed" });
+                renderOrders();
+
+                const payeeVPA = "yourshop@paytm";
+                const payeeName = "Foodi Restaurant";
+                const amount = "100";
+                window.location.href = `upi://pay?pa=${payeeVPA}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR`;
+            } else {
+                counterOrders.unshift({ id: newId, mode: "Counter", status: "Pending" });
+                renderOrders();
+
+                document.getElementById('orderId').innerText = newId.replace('#FOODI', '');
+                document.getElementById('orderDate').innerText = now.toLocaleDateString() + ' ' + timeStr;
+                
+                document.getElementById('checkoutSection').style.display = 'none';
+                document.getElementById('receiptSection').style.display = 'block';
+            }
+        }
+
+        function markComplete(index) {
+            counterOrders[index].status = "Completed";
+            renderOrders();
+        }
+
+        function resetToMenu() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
